@@ -1,0 +1,6 @@
+(write ((lambda (x) x) 0))
+(newline)
+(write ((lambda (x) (+ x 1)) 2))
+(newline)
+(write ((lambda (x y) (* x y (+ x y))) 3 4))
+(newline)
