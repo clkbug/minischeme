@@ -1,0 +1,8 @@
+(write (cons 1 2))
+(newline)
+(write (car (cons 1 2)))
+(newline)
+(write (cdr (cons 1 2)))
+(newline)
+(write (cons (cons 1 2) (cons 3 4)))
+(newline)

@@ -40,6 +40,9 @@
 	(write (eval env (cadr exp)) (eval env (caddr exp)))))
    ((eq? (car exp) 'quote) (cadr exp))
    ((eq? (car exp) 'newline) (newline))
+   ((eq? (car exp) 'cons) (cons (eval env (cadr exp)) (eval env (caddr exp))))
+   ((eq? (car exp) 'car) (car (eval env (cadr exp))))
+   ((eq? (car exp) 'cdr) (cdr (eval env (cadr exp))))
    (else
     (begin
       (format #t "failed to eval:\n~a\n" exp)
