@@ -3,6 +3,19 @@
   (if (null? lis)
       '()
       (cons (f (car lis)) (map f (cdr lis)))))
+(define (iter f lis)
+  (define (iter-sub f lis ret)
+    (if (null? lis)
+	ret
+	(begin
+	  (iter-sub f (cdr lis) (f (car lis))))))
+  (iter-sub f lis '()))
+(define (iter2 f lis1 lis2)
+  (if (or (null? lis1) (null? lis2))
+      '()
+      (begin
+	(f (car lis1) (car lis2))
+	(iter2 f (cdr lis1) (cdr lis2)))))
 (define (find pred lis)
   (if (null? lis)
       #f
@@ -34,9 +47,17 @@
      (else (format #t "failed to dispatch: env, msg(~a)\n" msg))))
   dispatch)
 
+(define (make-closure env params bodies)
+  (let ((clos-env (make-env env)))
+    (lambda args
+      (iter2 (lambda (var val) (clos-env 'add var val)) params args)
+      (iter (lambda (body) (eval clos-env body) bodies)))))
+
+
 (define (eval env exp)
 ;  (format #t "eval called with env[~a] and exp[~a]\n" env exp)
   (cond
+   ((symbol? exp) (env 'find exp))
    ((not (list? exp)) exp)
    ((eq? (car exp) 'write)
     (if (null? (cddr exp))
@@ -47,6 +68,12 @@
    ((eq? (car exp) 'cons) (cons (eval env (cadr exp)) (eval env (caddr exp))))
    ((eq? (car exp) 'car) (car (eval env (cadr exp))))
    ((eq? (car exp) 'cdr) (cdr (eval env (cadr exp))))
+   ((eq? (car exp) 'begin) (iter (lambda (e) (eval env e)) (cdr exp)))
+   ((eq? (car exp) 'lambda)
+    (let ((params (cadr exp))  ; "(lambda params bodies...)"
+	  (bodies (cddr exp)))
+      (make-closure env params bodies)))
+    
 
    ; arithmetic operators
    ((eq? (car exp) '+) (apply + (map (lambda (e) (eval env e)) (cdr exp))))
