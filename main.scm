@@ -38,6 +38,8 @@
     (if (null? (cddr exp))
 	(write (eval env (cadr exp)))
 	(write (eval env (cadr exp)) (eval env (caddr exp)))))
+   ((eq? (car exp) 'quote) (cadr exp))
+   ((eq? (car exp) 'newline) (newline))
    (else
     (begin
       (format #t "failed to eval:\n~a\n" exp)
