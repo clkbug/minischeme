@@ -1,4 +1,8 @@
 ; utils
+(define (map f lis)
+  (if (null? lis)
+      '()
+      (cons (f (car lis)) (map f (cdr lis)))))
 (define (find pred lis)
   (if (null? lis)
       #f
@@ -43,6 +47,11 @@
    ((eq? (car exp) 'cons) (cons (eval env (cadr exp)) (eval env (caddr exp))))
    ((eq? (car exp) 'car) (car (eval env (cadr exp))))
    ((eq? (car exp) 'cdr) (cdr (eval env (cadr exp))))
+
+   ; arithmetic operators
+   ((eq? (car exp) '+) (apply + (map (lambda (e) (eval env e)) (cdr exp))))
+   ((eq? (car exp) '-) (apply - (map (lambda (e) (eval env e)) (cdr exp))))
+   ((eq? (car exp) '*) (apply * (map (lambda (e) (eval env e)) (cdr exp))))
    (else
     (begin
       (format #t "failed to eval:\n~a\n" exp)
