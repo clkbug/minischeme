@@ -51,13 +51,13 @@
   (let ((clos-env (make-env env)))
     (lambda args
       (iter2 (lambda (var val) (clos-env 'add var val)) params args)
-      (iter (lambda (body) (eval clos-env body) bodies)))))
+      (iter (lambda (body) (eval clos-env body)) bodies))))
 
 
 (define (eval env exp)
 ;  (format #t "eval called with env[~a] and exp[~a]\n" env exp)
   (cond
-   ((symbol? exp) (env 'find exp))
+   ((symbol? exp) (let ((val (env 'find exp))) (if val (cdr val) (exit 1))))
    ((not (list? exp)) exp)
    ((eq? (car exp) 'write)
     (if (null? (cddr exp))
@@ -80,9 +80,11 @@
    ((eq? (car exp) '-) (apply - (map (lambda (e) (eval env e)) (cdr exp))))
    ((eq? (car exp) '*) (apply * (map (lambda (e) (eval env e)) (cdr exp))))
    (else
-    (begin
-      (format #t "failed to eval:\n~a\n" exp)
-      (cons env '())))))
+    (let ((f (eval env (car exp)))
+	  (args (map (lambda (e) (eval env e)) (cdr exp))))
+      (apply f args)
+;      (format #t "failed to eval:\n~a\nf:~a\nargs:~a" exp (eval env (car exp)) (cdr exp))
+      ))))
 
 (define (main args)
   (define (top-level (make-env #f)))
