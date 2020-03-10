@@ -64,6 +64,7 @@
 	(write (eval env (cadr exp)))
 	(write (eval env (cadr exp)) (eval env (caddr exp)))))
    ((eq? (car exp) 'quote) (cadr exp))
+   ((eq? (car exp) 'list) (map (lambda (e) (eval env e)) (cdr exp)))
    ((eq? (car exp) 'newline) (newline))
    ((eq? (car exp) 'cons) (cons (eval env (cadr exp)) (eval env (caddr exp))))
    ((eq? (car exp) 'car) (car (eval env (cadr exp))))

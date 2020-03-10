@@ -6,3 +6,7 @@
 (newline)
 (write (cons (cons 1 2) (cons 3 4)))
 (newline)
+(write (list 1 2 3))
+(newline)
+(write (list 4 5 6 (list 7 (list 8 9) (list 10))))
+(newline)
