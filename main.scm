@@ -70,6 +70,7 @@
    ((eq? (car exp) 'car) (car (eval env (cadr exp))))
    ((eq? (car exp) 'cdr) (cdr (eval env (cadr exp))))
    ((eq? (car exp) 'begin) (iter (lambda (e) (eval env e)) (cdr exp)))
+   ((eq? (car exp) 'if) (eval env (if (eval env (cadr exp)) (caddr exp) (cadddr exp))))
    ((eq? (car exp) 'lambda)
     (let ((params (cadr exp))  ; "(lambda params bodies...)"
 	  (bodies (cddr exp)))
