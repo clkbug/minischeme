@@ -71,6 +71,10 @@
    ((eq? (car exp) 'cdr) (cdr (eval env (cadr exp))))
    ((eq? (car exp) 'begin) (iter (lambda (e) (eval env e)) (cdr exp)))
    ((eq? (car exp) 'if) (eval env (if (eval env (cadr exp)) (caddr exp) (cadddr exp))))
+   ((eq? (car exp) 'define)
+    (if (symbol? (cadr exp))
+	(env 'add (cadr exp) (eval env (caddr exp)))
+	'()))
    ((eq? (car exp) 'lambda)
     (let ((params (cadr exp))  ; "(lambda params bodies...)"
 	  (bodies (cddr exp)))
@@ -103,7 +107,7 @@
       ))))
 
 (define (main args)
-  (define (top-level (make-env #f)))
+  (define top-level (make-env #f))
   (if (null? (cdr args))
       '() ; テストのために引数なしのときは何もせずに終わる
       (let ((port (open-input-file (cadr args))))

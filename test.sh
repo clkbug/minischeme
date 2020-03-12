@@ -11,6 +11,7 @@ tests=( \
 	    lambda-simple.scm \
 	    if.scm \
 	    lambda-closure.scm \
+	    define-toplevel.scm \
     )
 
 for t in ${tests[@]}; do

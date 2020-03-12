@@ -60,3 +60,8 @@
 (newline)
 
 
+(write ((lambda (x y) (+ x y)) 2 3))
+(newline)
+
+(write ((lambda (x y z) (* x y z)) 4 5 6))
+(newline)
