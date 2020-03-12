@@ -81,6 +81,20 @@
    ((eq? (car exp) '+) (apply + (map (lambda (e) (eval env e)) (cdr exp))))
    ((eq? (car exp) '-) (apply - (map (lambda (e) (eval env e)) (cdr exp))))
    ((eq? (car exp) '*) (apply * (map (lambda (e) (eval env e)) (cdr exp))))
+   ((eq? (car exp) '=) (apply = (map (lambda (e) (eval env e)) (cdr exp))))
+   ((eq? (car exp) '<=) (apply <= (map (lambda (e) (eval env e)) (cdr exp))))
+   ((eq? (car exp) '>=) (apply >= (map (lambda (e) (eval env e)) (cdr exp))))
+   ((eq? (car exp) '<) (apply < (map (lambda (e) (eval env e)) (cdr exp))))
+   ((eq? (car exp) '>) (apply > (map (lambda (e) (eval env e)) (cdr exp))))
+   
+   ((eq? (car exp) 'eq?) (apply eq? (map (lambda (e) (eval env e)) (cdr exp))))
+   ((eq? (car exp) 'eqv?) (apply eqv? (map (lambda (e) (eval env e)) (cdr exp))))
+   ((eq? (car exp) 'equal?) (apply equal? (map (lambda (e) (eval env e)) (cdr exp))))
+
+   ((eq? (car exp) 'not) (apply not (map (lambda (e) (eval env e)) (cdr exp))))
+   ; ((eq? (car exp) 'or) (apply or (map (lambda (e) (eval env e)) (cdr exp))))
+   ; ((eq? (car exp) 'and) (apply and (map (lambda (e) (eval env e)) (cdr exp))))
+   
    (else
     (let ((f (eval env (car exp)))
 	  (args (map (lambda (e) (eval env e)) (cdr exp))))
