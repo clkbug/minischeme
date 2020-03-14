@@ -1,5 +1,5 @@
 #!/bin/bash
-set -eu
+set -u
 
 tests=( \
 	atoms.scm \
@@ -12,10 +12,16 @@ tests=( \
 	    if.scm \
 	    lambda-closure.scm \
 	    define-toplevel.scm \
+	    quasiquote.scm \
     )
 
 for t in ${tests[@]}; do
-    echo $t
-    diff <(gosh test/$t) <(gosh main.scm test/$t)
+    # echo $t
+    result=$(diff <(gosh test/$t) <(gosh main.scm test/$t))
+    if [ $? -ne 0 ]; then
+	echo $result
+	echo $t ... Failed
+	exit 1
+    fi
     echo $t ... OK
 done

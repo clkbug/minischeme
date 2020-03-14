@@ -23,6 +23,10 @@
 	  (car lis)
 	  (find pred (cdr lis)))))
 
+(define (error str)
+  (format #t "error: ~a\n" str)
+  (exit 1))
+
 (define (make-env parents)
   (define env '())
   (define (find-pred sym) (lambda (x) (eq? sym (car x))))
@@ -53,6 +57,48 @@
       (iter2 (lambda (var val) (clos-env 'add var val)) params args)
       (iter (lambda (body) (eval clos-env body)) bodies))))
 
+(define (expand-quasiquote exp)
+  (cond
+   ((not (pair? exp)) (quasiquote (quote (unquote exp))))
+   ((eq? (car exp) 'unquote) (cadr exp))
+   ((eq? (car exp) 'unquote-splicing) (error "unreachable: unquote-splicing out of list"))
+   ((eq? (car exp) 'quasiquote)
+    (expand-quasiquote
+     (expand-quasiquote (cadr exp))))
+   (else
+    (quasiquote
+     (append
+      (unquote (expand-quasiquote-list (car exp)))
+      (unquote (expand-quasiquote (cdr exp))))))))
+
+(define (expand-quasiquote-list exp)
+  (cond
+   ((not (pair? exp)) (quasiquote (quote (unquote exp))))
+   ((eq? (car exp) 'unquote) (quasiquote (list (unquote (cadr exp)))))
+   ((eq? (car exp) 'unquote-splicing) (cadr exp))
+   ((eq? (car exp) 'quasiquote)
+    (expand-quasiquote-list (expand-quasiquote (cdr exp))))
+   (else
+    (quasiquote
+     (list
+      (append
+       (unquote (expand-quasiquote-list (car exp)))
+       (unquote (expand-quasiquote (cdr exp)))))))))
+    
+(define (eval-quasiquote env exp)
+  (cond
+   ((not (pair? exp)) exp)
+   ((eq? (car exp) 'unquote) (eval env (cadr exp)))
+   ((eq? (car exp) 'unquote-splicing) (error "unreachable! unquote-splicing out of list"))
+   (else ;(error "not implemented yet"))))
+    (apply append (map (lambda (e) (eval-quasiquote-list env e)) exp)))))
+
+(define (eval-quasiquote-list env exp)
+  (cond
+   ((not (pair? exp)) (list exp))
+   ((eq? (car exp) 'unquote) (list (eval env (cadr exp))))
+   ((eq? (car exp) 'unquote-splicing) (eval env (cadr exp)))
+   (else (list (eval-quasiquote env exp)))))
 
 (define (eval env exp)
 ;  (format #t "eval called with env[~a] and exp[~a]\n" env exp)
@@ -64,6 +110,8 @@
 	(write (eval env (cadr exp)))
 	(write (eval env (cadr exp)) (eval env (caddr exp)))))
    ((eq? (car exp) 'quote) (cadr exp))
+;   ((eq? (car exp) 'quasiquote) (eval env #?=(expand-quasiquote (cadr exp))))
+   ((eq? (car exp) 'quasiquote) (eval-quasiquote env (cadr exp)))
    ((eq? (car exp) 'list) (map (lambda (e) (eval env e)) (cdr exp)))
    ((eq? (car exp) 'newline) (newline))
    ((eq? (car exp) 'cons) (cons (eval env (cadr exp)) (eval env (caddr exp))))
@@ -104,13 +152,16 @@
    ((eq? (car exp) 'not) (apply not (map (lambda (e) (eval env e)) (cdr exp))))
    ; ((eq? (car exp) 'or) (apply or (map (lambda (e) (eval env e)) (cdr exp))))
    ; ((eq? (car exp) 'and) (apply and (map (lambda (e) (eval env e)) (cdr exp))))
+
+   ((eq? (car exp) 'list?) (apply list? (map (lambda (e) (eval env e)) (cdr exp))))
+   ((eq? (car exp) 'pair?) (apply pair? (map (lambda (e) (eval env e)) (cdr exp))))
+   ((eq? (car exp) 'apply) (apply apply (map (lambda (e) (eval env e)) (cdr exp))))
+   ((eq? (car exp) 'append) (apply append (map (lambda (e) (eval env e)) (cdr exp))))
    
    (else
     (let ((f (eval env (car exp)))
 	  (args (map (lambda (e) (eval env e)) (cdr exp))))
-      (apply f args)
-;      (format #t "failed to eval:\n~a\nf:~a\nargs:~a" exp (eval env (car exp)) (cdr exp))
-      ))))
+      (apply f args)))))
 
 (define (main args)
   (define top-level (make-env #f))
