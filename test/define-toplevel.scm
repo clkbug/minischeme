@@ -1,0 +1,56 @@
+(define a 2)
+(write a)
+(newline)
+(write (+ a a (* a a)))
+(newline)
+(define b (+ 1 a 3 4))
+(write (* a b))
+(newline)
+(define a (- a b))
+(write a)
+(newline)
+
+(define add-one (lambda (x) (+ x 1)))
+(write (add-one 10))
+(newline)
+
+(define (add-two n) (+ n 2))
+(write (add-two 10))
+(newline)
+
+(define (mul a b c) (* a b c))
+(write (mul 2 (mul 3 (add-two 2) (add-two (add-two 8))) (add-one 100)))
+(newline)
+
+(define (fact n)
+  (if (<= n 1) 1 (* n (fact (- n 1)))))
+(write (fact 5))
+(newline)
+(define (fact-iter n)
+  (if (<= n 15)
+      (begin
+	(write (cons n (fact n)))
+	(newline)
+	(fact-iter (+ n 1)))
+      '()))
+(fact-iter 0)
+
+(define (fib n)
+  (if (<= n 2) 1
+      (begin
+	(write (cons 'fib-called-with n))
+	(newline)
+	(+ (fib (- n 1)) (fib (- n 2))))))
+(write (fib 1))
+(newline)
+(write (fib 2))
+(newline)
+(define (fib-iter n)
+  (if (> n 10)
+      '()
+      (begin
+	(write (cons n (fib n)))
+	(newline)
+	(fib-iter (+ n 1)))))
+
+(fib-iter 1)

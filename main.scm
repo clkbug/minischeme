@@ -48,8 +48,8 @@
   dispatch)
 
 (define (make-closure env params bodies)
-  (let ((clos-env (make-env env)))
-    (lambda args
+  (lambda args
+    (let ((clos-env (make-env env)))
       (iter2 (lambda (var val) (clos-env 'add var val)) params args)
       (iter (lambda (body) (eval clos-env body)) bodies))))
 
@@ -74,12 +74,18 @@
    ((eq? (car exp) 'define)
     (if (symbol? (cadr exp))
 	(env 'add (cadr exp) (eval env (caddr exp)))
-	'()))
+	(let* ((name-and-params (cadr exp))
+	       (name (car name-and-params))
+	       (params (cdr name-and-params))
+	       (bodies (cddr exp))
+	       (closure (make-closure env params bodies)))
+	  (env 'add name closure))))
+
    ((eq? (car exp) 'lambda)
     (let ((params (cadr exp))  ; "(lambda params bodies...)"
 	  (bodies (cddr exp)))
       (make-closure env params bodies)))
-    
+
 
    ; arithmetic operators
    ((eq? (car exp) '+) (apply + (map (lambda (e) (eval env e)) (cdr exp))))
