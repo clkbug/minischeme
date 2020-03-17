@@ -11,8 +11,12 @@ tests=( \
 	    lambda-simple.scm \
 	    if.scm \
 	    lambda-closure.scm \
+	    lambda-dotted.scm \
 	    define-toplevel.scm \
 	    quasiquote.scm \
+	    define-macro.scm \
+	    sytax-rules-simple.scm \
+	    lets.scm \
     )
 
 for t in ${tests[@]}; do

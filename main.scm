@@ -4,12 +4,10 @@
       '()
       (cons (f (car lis)) (map f (cdr lis)))))
 (define (iter f lis)
-  (define (iter-sub f lis ret)
-    (if (null? lis)
-	ret
-	(begin
-	  (iter-sub f (cdr lis) (f (car lis))))))
-  (iter-sub f lis '()))
+  (letrec ((iter-sub
+	    (lambda (f lis ret)
+	      (if (null? lis) ret (iter-sub f (cdr lis) (f (car lis)))))))
+    (iter-sub f lis '())))
 (define (iter2 f lis1 lis2)
   (if (or (null? lis1) (null? lis2))
       '()
@@ -42,20 +40,37 @@
       (if find-result
 	  (set! env (cons (cons sym val) env))
 	  (if parents (parents 'update sym val) #f))))
-    
+  (define (dump) (cons env parents))
   (define (dispatch msg . args)
     (cond
      ((eq? msg 'add) (apply add args))
      ((eq? msg 'find) (apply env-find args))
      ((eq? msg 'update) (apply update args))
+     ((eq? msg 'dump) (dump))
      (else (format #t "failed to dispatch: env, msg(~a)\n" msg))))
   dispatch)
 
 (define (make-closure env params bodies)
   (lambda args
     (let ((clos-env (make-env env)))
-      (iter2 (lambda (var val) (clos-env 'add var val)) params args)
-      (iter (lambda (body) (eval clos-env body)) bodies))))
+      (cond
+       ((symbol? params)
+	(begin
+	  (clos-env 'add params args)
+	  (iter (lambda (body) (eval clos-env body)) bodies)))
+       ((list? params)
+	(begin
+	  (iter2 (lambda (var val) (clos-env 'add var val)) params args)
+	  (iter (lambda (body) (eval clos-env body)) bodies)))
+       (else (letrec ((iter2 (lambda (f lis1 lis2)
+			       (if (pair? lis1)
+				   (begin
+				     (f (car lis1) (car lis2))
+				     (iter2 f (cdr lis1) (cdr lis2)))
+				   (f lis1 lis2)))))
+	       (iter2 (lambda (var val) (clos-env 'add var val)) params args)
+	       (iter (lambda (body) (eval clos-env body)) bodies)))))))
+
 
 (define (expand-quasiquote exp)
   (cond
@@ -117,6 +132,7 @@
    ((eq? (car exp) 'cons) (cons (eval env (cadr exp)) (eval env (caddr exp))))
    ((eq? (car exp) 'car) (car (eval env (cadr exp))))
    ((eq? (car exp) 'cdr) (cdr (eval env (cadr exp))))
+   ((eq? (car exp) 'cadr) (cadr (eval env (cadr exp))))
    ((eq? (car exp) 'begin) (iter (lambda (e) (eval env e)) (cdr exp)))
    ((eq? (car exp) 'if) (eval env (if (eval env (cadr exp)) (caddr exp) (cadddr exp))))
    ((eq? (car exp) 'define)
