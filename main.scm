@@ -63,8 +63,8 @@
 		 (else (iter2 (lambda (var val) (clos-env 'add var val)) params args)))
 		; add self
 		(clos-env 'add name closure)
-		; eval bodies
-		(iter (lambda (body) (eval body clos-env)) bodies)))))
+		; minieval bodies
+		(iter (lambda (body) (minieval body clos-env)) bodies)))))
     closure))
 
 
@@ -88,29 +88,21 @@
    ((eq? (car exp) 'quasiquote) (expand-quasiquote-list (expand-quasiquote (cadr exp))))
    (else `(list (append ,(expand-quasiquote-list (car exp)) ,(expand-quasiquote (cdr exp)))))))
 
-(define (eval exp env)
+(define (minieval exp env)
 ;  #?=exp
   (cond
    ((symbol? exp) (let ((val (env 'find exp))) (if val (cdr val) (error "not found: ~a in env" exp))))
    ((not (list? exp)) exp)
    ((eq? (car exp) 'write)
     (if (null? (cddr exp))
-	(write (eval (cadr exp) env))
-					;	(write (eval (cadr exp) env) (eval (caddr exp) env))))
+	(write (minieval (cadr exp) env))
+					;	(write (minieval (cadr exp) env) (minieval (caddr exp) env))))
 	#f))
    ((eq? (car exp) 'quote) (cadr exp))
-   ((eq? (car exp) 'quasiquote) (eval (expand-quasiquote (cadr exp)) env))
-   ((eq? (car exp) 'list) (map (lambda (expr) (eval expr env)) (cdr exp)))
-   ((eq? (car exp) 'newline) (newline))
-   ((eq? (car exp) 'cons) (cons (eval (cadr exp) env) (eval (caddr exp) env)))
-   ((eq? (car exp) 'car) (car (eval (cadr exp) env)))
-   ((eq? (car exp) 'cdr) (cdr (eval (cadr exp) env)))
-   ((eq? (car exp) 'cadr) (cadr (eval (cadr exp) env)))
-   ((eq? (car exp) 'cddr) (cddr (eval (cadr exp) env)))
-   ((eq? (car exp) 'caddr) (caddr (eval (cadr exp) env)))
-   ((eq? (car exp) 'begin) (iter (lambda (expr) (eval expr env)) (cdr exp)))
+   ((eq? (car exp) 'quasiquote) (minieval (expand-quasiquote (cadr exp)) env))
+   ((eq? (car exp) 'begin) (iter (lambda (expr) (minieval expr env)) (cdr exp)))
    ((eq? (car exp) 'if)
-    (eval (if (eval (cadr exp) env)
+    (minieval (if (minieval (cadr exp) env)
 	      (caddr exp)
 	      (if (pair? (cdddr exp)) (cadddr exp) #f))
 	  env))
@@ -120,16 +112,16 @@
 	  (let ((condition (caar conds-and-exps))
 		(exp       (cadar conds-and-exps)))
 	    (cond
-	     ((or (eq? condition 'else) (eval condition env))
-	      (eval exp env))
+	     ((or (eq? condition 'else) (minieval condition env))
+	      (minieval exp env))
 	     (else (loop (cdr conds-and-exps))))))))
    ((eq? (car exp) 'set!)
     (if (not (symbol? (cadr exp)))
 	(error "unimplemented set! to non-variable")
-	(env 'update (cadr exp) (eval (caddr exp) env))))
+	(env 'update (cadr exp) (minieval (caddr exp) env))))
    ((eq? (car exp) 'define)
     (if (symbol? (cadr exp))
-	(env 'add (cadr exp) (eval (caddr exp) env))
+	(env 'add (cadr exp) (minieval (caddr exp) env))
 	(let* ((name-and-params (cadr exp))
 	       (name (car name-and-params))
 	       (params (cdr name-and-params))
@@ -148,16 +140,16 @@
 	   (binds (if is-named-let? (caddr exp) (cadr exp)))
 	   (bodies (if is-named-let? (cdddr exp) (cddr exp))))
       (apply (make-closure-with-names name env (map car binds) bodies)
-	     (map (lambda (expr) (eval expr env)) (map cadr binds)))))
+	     (map (lambda (expr) (minieval expr env)) (map cadr binds)))))
    ((eq? (car exp) 'let*)
-    (eval (let let*-expand ((binds (cadr exp))
+    (minieval (let let*-expand ((binds (cadr exp))
 			    (bodies (cddr exp)))
 	    (if (null? binds)
 		`(let () ,@bodies)
 		`(let (,(car binds)) ,(let*-expand (cdr binds) bodies))))
 	  env))
    ((eq? (car exp) 'letrec*)
-    (eval (let letrec*-expand ((binds (cadr exp))
+    (minieval (let letrec*-expand ((binds (cadr exp))
 			       (bodies (cddr exp)))
 	    (if (null? binds)
 		`(let () ,@bodies)
@@ -168,64 +160,46 @@
 		     ,(letrec*-expand (cdr binds) bodies)))))
 	  env))
    ((eq? (car exp) 'letrec)
-    (eval (let letrec-expand ((binds (cadr exp))
+    (minieval (let letrec-expand ((binds (cadr exp))
 			      (bodies (cddr exp)))
 	    `(let ,(map (lambda (bind) `(,(car bind) #f)) binds)
 	       ,@(map (lambda (bind) `(set! ,(car bind) ,(cadr bind))) binds)
 	       ,@bodies))
 	  env))
 			     
-
-
-   ; arithmetic operators
-   ((eq? (car exp) '+) (apply + (map (lambda (expr) (eval expr env)) (cdr exp))))
-   ((eq? (car exp) '-) (apply - (map (lambda (expr) (eval expr env)) (cdr exp))))
-   ((eq? (car exp) '*) (apply * (map (lambda (expr) (eval expr env)) (cdr exp))))
-   ((eq? (car exp) '=) (apply = (map (lambda (expr) (eval expr env)) (cdr exp))))
-   ((eq? (car exp) 'mod) (apply mod (map (lambda (expr) (eval expr env)) (cdr exp))))
-   ((eq? (car exp) '<=) (apply <= (map (lambda (expr) (eval expr env)) (cdr exp))))
-   ((eq? (car exp) '>=) (apply >= (map (lambda (expr) (eval expr env)) (cdr exp))))
-   ((eq? (car exp) '<) (apply < (map (lambda (expr) (eval expr env)) (cdr exp))))
-   ((eq? (car exp) '>) (apply > (map (lambda (expr) (eval expr env)) (cdr exp))))
-   
-   ((eq? (car exp) 'eq?) (apply eq? (map (lambda (expr) (eval expr env)) (cdr exp))))
-   ((eq? (car exp) 'eqv?) (apply eqv? (map (lambda (expr) (eval expr env)) (cdr exp))))
-   ((eq? (car exp) 'equal?) (apply equal? (map (lambda (expr) (eval expr env)) (cdr exp))))
-
-   ((eq? (car exp) 'not) (apply not (map (lambda (expr) (eval expr env)) (cdr exp))))
-   ; ((eq? (car exp) 'or) (apply or (map (lambda (expr) (eval expr env)) (cdr exp))))
-   ; ((eq? (car exp) 'and) (apply and (map (lambda (expr) (eval expr env)) (cdr exp))))
-
-   ((eq? (car exp) 'symbol?) (apply symbol? (map (lambda (expr) (eval expr env)) (cdr exp))))
-   ((eq? (car exp) 'null?) (apply null? (map (lambda (expr) (eval expr env)) (cdr exp))))
-   ((eq? (car exp) 'list?) (apply list? (map (lambda (expr) (eval expr env)) (cdr exp))))
-   ((eq? (car exp) 'pair?) (apply pair? (map (lambda (expr) (eval expr env)) (cdr exp))))
-   ((eq? (car exp) 'apply) (apply apply (map (lambda (expr) (eval expr env)) (cdr exp))))
-   ((eq? (car exp) 'append) (apply append (map (lambda (expr) (eval expr env)) (cdr exp))))
-
-   ((eq? (car exp) 'read) (apply read (map (lambda (expr) (eval expr env)) (cdr exp))))
-   ((eq? (car exp) 'write) (apply write (map (lambda (expr) (eval expr env)) (cdr exp))))
-
-   ((eq? (car exp) 'open-input-file) (apply open-input-file (map (lambda (expr) (eval expr env)) (cdr exp))))
-   ((eq? (car exp) 'eof-object?) (apply eof-object? (map (lambda (expr) (eval expr env)) (cdr exp))))
-
-   ((eq? (car exp) 'debug-print) (write (cons "debug-print" (cdr exp))))
-
    (else
-    (let ((f (eval (car exp) env))
-	  (args (map (lambda (expr) (eval expr env)) (cdr exp))))
+    (let ((f (minieval (car exp) env))
+	  (args (map (lambda (expr) (minieval expr env)) (cdr exp))))
       (apply f args)))))
 
-(define (init-toplevel env) '())
+(define (init-toplevel env)
+  (let ((register
+	 (lambda (sym)
+	   (env 'add sym (lambda args (apply (eval sym #f) args))))))
+    (iter
+     register
+     (append
+      '(write newline)
+      '(list cons append car cdr cadr cddr caddr caar cddr cdddr cadddr cadar)
+      '(+ - * mod = <= >= < >)
+      '(eq? eqv? equal?)
+      '(not)
+      '(symbol? null? list? pair? eof-object?)
+      '(read write)
+      '(gensym eval apply)
+      '(open-input-file)
+      '(debug-print)
+    ))))
   
   
 (define (main args)
   (let ((top-level (make-env #f)))
+    (init-toplevel top-level)
     (if (null? (cdr args))
 	'() ; テストのために引数なしのときは何もせずに終わる
 	(let ((port (open-input-file (cadr args))))
 	  (let loop ((exp (read port)))
-	    (eval exp top-level)
+	    (minieval exp top-level)
 	    (if (eof-object? exp)
 		'()
 		(loop (read port))))))
@@ -233,6 +207,6 @@
     (if (top-level 'find 'main)
 	(begin
 	  (top-level 'add 'args (cdr args))
-	  (eval '(main args) top-level))
+	  (minieval '(main args) top-level))
 	#f)))
 
