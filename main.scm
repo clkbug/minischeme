@@ -28,29 +28,30 @@
   (exit 1))
 
 (define (make-env parents)
-  (define env '())
-  (define (find-pred sym) (lambda (x) (eq? sym (car x))))
-  (define (add sym val)
-    (set! env (cons (cons sym val) env)))
-  (define (env-find sym)
-    (let ((result (find (find-pred sym) env)))
-      (if result
-	  result
-	  (if parents (parents 'find sym) #f))))
-  (define (update sym val)
-    (let ((find-result (find (find-pred sym) env)))
-      (if find-result
-	  (set! env (cons (cons sym val) env))
-	  (if parents (parents 'update sym val) #f))))
-  (define (dump) (cons env parents))
-  (define (dispatch msg . args)
-    (cond
-     ((eq? msg 'add) (apply add args))
-     ((eq? msg 'find) (apply env-find args))
-     ((eq? msg 'update) (apply update args))
-     ((eq? msg 'dump) (dump))
-     (else (format #t "failed to dispatch: env, msg(~a)\n" msg))))
-  dispatch)
+  (let* ((env '())
+	(find-pred (lambda (sym) (lambda (x) (eq? sym (car x)))))
+	(add (lambda (sym val) (set! env (cons (cons sym val) env))))
+	(env-find
+	 (lambda (sym)
+	   (let ((result (find (find-pred sym) env)))
+	     (if result
+		 result
+		 (if parents (parents 'find sym) #f)))))
+	(update
+	 (lambda (sym val)
+	   (let ((find-result (find (find-pred sym) env)))
+	     (if find-result
+		 (set! env (cons (cons sym val) env))
+		 (if parents (parents 'update sym val) #f)))))
+	(dump (lambda () (cons env parents)))
+	(dispatch (lambda (msg . args)
+		    (cond
+		     ((eq? msg 'add) (apply add args))
+		     ((eq? msg 'find) (apply env-find args))
+		     ((eq? msg 'update) (apply update args))
+		     ((eq? msg 'dump) (dump))
+		     (else (format #t "failed to dispatch: env, msg(~a)\n" msg))))))
+    dispatch))
 
 (define (make-closure-with-names name env params bodies)
   (letrec ((closure
