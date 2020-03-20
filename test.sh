@@ -65,7 +65,10 @@ for val in "${read_and_write_values[@]}"; do
 done
 
 # self-host test
-echo self-host test
+echo
+echo ==
+echo start self-host test
+echo --
 for t in ${tests[@]}; do
     echo -n self-host $t ...
     result=$(diff <(gosh test/$t) <(gosh main.scm main.scm test/$t))
