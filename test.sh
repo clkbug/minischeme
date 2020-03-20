@@ -10,6 +10,7 @@ tests=(
     begin.scm
     lambda-simple.scm
     if.scm
+    and-or.scm
     lambda-closure.scm
     lambda-dotted.scm
     define-toplevel.scm

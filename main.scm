@@ -105,7 +105,21 @@
     (minieval (if (minieval (cadr exp) env)
 	      (caddr exp)
 	      (if (pair? (cdddr exp)) (cadddr exp) #f))
-	  env))
+	      env))
+   ((eq? (car exp) 'or)
+    (let loop ((args (cdr exp)))
+      (if (null? args)
+	  #f
+	  (let ((val (minieval (car args) env)))
+	    (if val val (loop (cdr args)))))))
+   ((eq? (car exp) 'and)
+    (let loop ((args (cdr exp)))
+      (if (null? args)
+	  #t
+	  (let ((val (minieval (car args) env)))
+	    (if val
+		(if (null? (cdr args)) val (loop (cdr args)))
+		#f)))))
    ((eq? (car exp) 'cond)
     (let loop ((conds-and-exps (cdr exp)))
       (if (not (null? conds-and-exps))
