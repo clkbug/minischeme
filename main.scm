@@ -21,8 +21,9 @@
 	  (car lis)
 	  (find pred (cdr lis)))))
 
-(define (error str)
-  (format #t "error: ~a\n" str)
+(define (error str . rest)
+  (let ((message (apply format `(#f ,str ,@rest))))
+    (format #t "error:\n\t~a\n" message))
   (exit 1))
 
 (define (make-env parents)
@@ -118,7 +119,7 @@
 (define (eval env exp)
 ;  (format #t "eval called with env[~a] and exp[~a]\n" env exp)
   (cond
-   ((symbol? exp) (let ((val (env 'find exp))) (if val (cdr val) (exit 1))))
+   ((symbol? exp) (let ((val (env 'find exp))) (if val (cdr val) (error "not found: ~a in env" exp))))
    ((not (list? exp)) exp)
    ((eq? (car exp) 'write)
     (if (null? (cddr exp))
@@ -149,6 +150,12 @@
     (let ((params (cadr exp))  ; "(lambda params bodies...)"
 	  (bodies (cddr exp)))
       (make-closure env params bodies)))
+
+   ((eq? (car exp) 'let)
+    (let ((binds (cadr exp))
+	  (bodies (cddr exp)))
+      (apply (make-closure env (map car binds) bodies)
+	     (map (lambda (e) (eval env e)) (map cadr binds)))))
 
 
    ; arithmetic operators

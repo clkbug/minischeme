@@ -14,9 +14,10 @@ tests=( \
 	    lambda-dotted.scm \
 	    define-toplevel.scm \
 	    quasiquote.scm \
-	    define-macro.scm \
-	    sytax-rules-simple.scm \
 	    lets.scm \
+#	    define-macro.scm \
+#	    sytax-rules-simple.scm \
+
     )
 
 for t in ${tests[@]}; do

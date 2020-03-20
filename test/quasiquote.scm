@@ -37,3 +37,6 @@
 (define l2 (quote (1 2 (3 4) (unquote-splicing (5 6 7)))))
 (write (quasiquote (0 1 (unquote-splicing l2))))
 (newline)
+
+(write (quasiquote (unquote ((lambda (x) (+ x x)) 100))))
+(newline)

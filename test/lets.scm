@@ -21,6 +21,11 @@
       (let* ((x 20) (y (+ x 1 2 3))) (* x y)))))
 (newline)
 
+(write
+ (let ((f (lambda (x) (+ x x x x x x x))))
+   (+ (f 1) (f 2) (+ (f 3) (f 4) (f (+ 5 6 7))))))
+(newline)
+
 (write (let* ((x 1) (y (+ x 1)) (z (* x y))) (+ x y z)))
 (newline)
 
