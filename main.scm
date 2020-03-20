@@ -226,13 +226,18 @@
       (apply f args)))))
 
 (define (main args)
-  (define top-level (make-env #f))
-  (if (null? (cdr args))
-      '() ; テストのために引数なしのときは何もせずに終わる
-      (let ((port (open-input-file (cadr args))))
-	(let loop ((exp (read port)))
-	  (eval top-level exp)
-	  (if (eof-object? exp)
-	      '()
-	      (loop (read port)))))))
+  (let ((top-level (make-env #f)))
+    (if (null? (cdr args))
+	'() ; テストのために引数なしのときは何もせずに終わる
+	(let ((port (open-input-file (cadr args))))
+	  (let loop ((exp (read port)))
+	    (eval top-level exp)
+	    (if (eof-object? exp)
+		'()
+		(loop (read port))))))
+
+    (if (top-level 'find 'main)
+	(begin
+	  (top-level 'add 'args (cdr args))
+	  (eval top-level '(main args))))))
 

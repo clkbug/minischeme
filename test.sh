@@ -1,21 +1,22 @@
 #!/bin/bash
 set -u
 
-tests=( \
-	atoms.scm \
-	    write-simple.scm \
-	    write-quote.scm \
-	    cons.scm \
-	    arith-simple.scm \
-	    begin.scm \
-	    lambda-simple.scm \
-	    if.scm \
-	    lambda-closure.scm \
-	    lambda-dotted.scm \
-	    define-toplevel.scm \
-	    quasiquote.scm \
-	    lets.scm \
-	    cond.scm \
+tests=(
+    atoms.scm
+    write-simple.scm
+    write-quote.scm
+    cons.scm
+    arith-simple.scm
+    begin.scm
+    lambda-simple.scm
+    if.scm
+    lambda-closure.scm
+    lambda-dotted.scm
+    define-toplevel.scm
+    quasiquote.scm
+    lets.scm
+    cond.scm
+    main-procedure.scm
 #	    read-and-write.scm \
 #	    define-macro.scm \
 #	    sytax-rules-simple.scm \
