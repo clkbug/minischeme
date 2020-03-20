@@ -81,3 +81,20 @@ for t in ${tests[@]}; do
     fi
     echo ' OK'
 done
+
+# self-host test2
+echo
+echo ==
+echo start self-host test2
+echo --
+for t in ${tests[@]}; do
+    echo -n self-host2 $t ...
+    result=$(diff <(gosh test/$t) <(gosh main.scm main.scm main.scm test/$t))
+
+    if [ $? -ne 0 ]; then
+	echo -e $result
+	echo self-host2 $t ... Failed
+	exit 1
+    fi
+    echo ' OK'
+done

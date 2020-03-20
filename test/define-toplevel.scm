@@ -46,7 +46,7 @@
 (write (fib 2))
 (newline)
 (define (fib-iter n)
-  (if (> n 10)
+  (if (> n 6)
       '()
       (begin
 	(write (cons n (fib n)))

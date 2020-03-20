@@ -49,7 +49,7 @@
 	    (lambda (X) (f (lambda (x) ((X X) x))))))
 	 (lambda (f)
 	   (lambda (n)
-	     (if (< n 2) 1 (+ (f (- n 1)) (f (- n 2))))))) 10))
+	     (if (< n 2) 1 (+ (f (- n 1)) (f (- n 2))))))) 5))
 (newline)
 		
 
