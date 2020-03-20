@@ -9,8 +9,6 @@
 	      (if (null? lis) ret (iter-sub f (cdr lis) (f (car lis)))))))
     (iter-sub f lis '())))
 (define (iter2 f lis1 lis2)
-  #?=lis1
-  #?=lis2
   (cond
    ((null? lis1) '())
    ((not (pair? lis1)) (f lis1 lis2))
@@ -92,7 +90,7 @@
 
 
 (define (eval env exp)
-  ;#?=exp
+;  #?=exp
   (cond
    ((symbol? exp) (let ((val (env 'find exp))) (if val (cdr val) (error "not found: ~a in env" exp))))
    ((not (list? exp)) exp)
@@ -101,7 +99,6 @@
 	(write (eval env (cadr exp)))
 	(write (eval env (cadr exp)) (eval env (caddr exp)))))
    ((eq? (car exp) 'quote) (cadr exp))
-;   ((eq? (car exp) 'quasiquote) (eval env #?=(expand-quasiquote (cadr exp))))
    ((eq? (car exp) 'quasiquote) (eval env (expand-quasiquote (cadr exp))))
    ((eq? (car exp) 'list) (map (lambda (e) (eval env e)) (cdr exp)))
    ((eq? (car exp) 'newline) (newline))
@@ -110,7 +107,10 @@
    ((eq? (car exp) 'cdr) (cdr (eval env (cadr exp))))
    ((eq? (car exp) 'cadr) (cadr (eval env (cadr exp))))
    ((eq? (car exp) 'begin) (iter (lambda (e) (eval env e)) (cdr exp)))
-   ((eq? (car exp) 'if) (eval env (if (eval env (cadr exp)) (caddr exp) (cadddr exp))))
+   ((eq? (car exp) 'if)
+    (eval env (if (eval env (cadr exp))
+		  (caddr exp)
+		  (if (pair? (cdddr exp)) (cadddr exp) #f))))
    ((eq? (car exp) 'cond)
     (let loop ((conds-and-exps (cdr exp)))
       (if (not (null? conds-and-exps))
@@ -203,7 +203,7 @@
    ((eq? (car exp) 'open-input-file) (apply open-input-file (map (lambda (e) (eval env e)) (cdr exp))))
    ((eq? (car exp) 'eof-object?) (apply eof-object? (map (lambda (e) (eval env e)) (cdr exp))))
 
-   ((eq? (car exp) 'debug-print) (cdr exp))
+   ((eq? (car exp) 'debug-print) (write (cons "debug-print" (cdr exp))))
 
    (else
     (let ((f (eval env (car exp)))
@@ -224,5 +224,6 @@
     (if (top-level 'find 'main)
 	(begin
 	  (top-level 'add 'args (cdr args))
-	  (eval top-level '(main args))))))
+	  (eval top-level '(main args)))
+	#f)))
 

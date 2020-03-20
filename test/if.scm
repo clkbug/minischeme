@@ -10,7 +10,7 @@
 (newline)
 (if (< 5 1) (write 0) (write 1))
 (newline)
-(write (if (= 2 3) (write 0) (write 1)))
+(if (= 2 3) (write 0) (write 1))
 (newline)
 (write (if (not (= 1 1)) 10 20))
 (newline)

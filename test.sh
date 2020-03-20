@@ -18,6 +18,7 @@ tests=(
     cond.scm
     main-procedure.scm
     message-passing.scm
+    miniminischeme-0.scm
 #	    read-and-write.scm \
 #	    define-macro.scm \
 #	    sytax-rules-simple.scm \
@@ -61,4 +62,18 @@ for val in "${read_and_write_values[@]}"; do
     else
 	echo "OK"
     fi
+done
+
+# self-host test
+echo self-host test
+for t in ${tests[@]}; do
+    echo -n self-host $t ...
+    result=$(diff <(gosh test/$t) <(gosh main.scm main.scm test/$t))
+
+    if [ $? -ne 0 ]; then
+	echo -e $result
+	echo self-host $t ... Failed
+	exit 1
+    fi
+    echo ' OK'
 done
