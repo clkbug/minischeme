@@ -176,6 +176,12 @@
 		      `(let ((,var #f))
 			 (set! ,var ,val)
 			 ,(letrec*-expand (cdr binds) bodies)))))))
+   ((eq? (car exp) 'letrec)
+    (eval env (let letrec-expand ((binds (cadr exp))
+				  (bodies (cddr exp)))
+		`(let ,(map (lambda (bind) `(,(car bind) #f)) binds)
+		   ,@(map (lambda (bind) `(set! ,(car bind) ,(cadr bind))) binds)
+		   ,@bodies))))
 			     
 
 
