@@ -16,6 +16,14 @@
 (newline)
 
 (write
+ (let fact ((n 10))
+   (if (<= n 0) 1 (* n (fact (- n 1))))))
+(newline)
+
+(write (let () (+ 1 2 3)))
+(newline)
+
+(write
  (let ((x 10))
    (+ x
       (let* ((x 20) (y (+ x 1 2 3))) (* x y)))))

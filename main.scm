@@ -9,11 +9,12 @@
 	      (if (null? lis) ret (iter-sub f (cdr lis) (f (car lis)))))))
     (iter-sub f lis '())))
 (define (iter2 f lis1 lis2)
-  (if (or (null? lis1) (null? lis2))
-      '()
-      (begin
-	(f (car lis1) (car lis2))
-	(iter2 f (cdr lis1) (cdr lis2)))))
+  (cond
+   ((null? lis1) '())
+   ((not (pair? lis1)) (f lis1 lis2))
+   (else (begin
+	   (f (car lis1) (car lis2))
+	   (iter2 f (cdr lis1) (cdr lis2))))))
 (define (find pred lis)
   (if (null? lis)
       #f
@@ -51,26 +52,23 @@
      (else (format #t "failed to dispatch: env, msg(~a)\n" msg))))
   dispatch)
 
+(define (make-closure-with-names name env params bodies)
+  (letrec ((closure
+	    (lambda args
+	      (let ((clos-env (make-env env)))
+		; binds
+		(cond
+		 ((symbol? params) (clos-env 'add params args))
+		 (else (iter2 (lambda (var val) (clos-env 'add var val)) params args)))
+		; add self
+		(clos-env 'add name closure)
+		; eval bodies
+		(iter (lambda (body) (eval clos-env body)) bodies)))))
+    closure))
+
+
 (define (make-closure env params bodies)
-  (lambda args
-    (let ((clos-env (make-env env)))
-      (cond
-       ((symbol? params)
-	(begin
-	  (clos-env 'add params args)
-	  (iter (lambda (body) (eval clos-env body)) bodies)))
-       ((list? params)
-	(begin
-	  (iter2 (lambda (var val) (clos-env 'add var val)) params args)
-	  (iter (lambda (body) (eval clos-env body)) bodies)))
-       (else (letrec ((iter2 (lambda (f lis1 lis2)
-			       (if (pair? lis1)
-				   (begin
-				     (f (car lis1) (car lis2))
-				     (iter2 f (cdr lis1) (cdr lis2)))
-				   (f lis1 lis2)))))
-	       (iter2 (lambda (var val) (clos-env 'add var val)) params args)
-	       (iter (lambda (body) (eval clos-env body)) bodies)))))))
+  (make-closure-with-names (gensym) env params bodies))
 
 
 (define (expand-quasiquote exp)
@@ -136,6 +134,10 @@
    ((eq? (car exp) 'cadr) (cadr (eval env (cadr exp))))
    ((eq? (car exp) 'begin) (iter (lambda (e) (eval env e)) (cdr exp)))
    ((eq? (car exp) 'if) (eval env (if (eval env (cadr exp)) (caddr exp) (cadddr exp))))
+   ((eq? (car exp) 'set!)
+    (if (not (symbol? (cadr exp)))
+	(error "unimplemented set! to non-variable")
+	(env 'update (cadr exp) (eval env (caddr exp)))))
    ((eq? (car exp) 'define)
     (if (symbol? (cadr exp))
 	(env 'add (cadr exp) (eval env (caddr exp)))
@@ -152,10 +154,29 @@
       (make-closure env params bodies)))
 
    ((eq? (car exp) 'let)
-    (let ((binds (cadr exp))
-	  (bodies (cddr exp)))
-      (apply (make-closure env (map car binds) bodies)
+    (let* ((is-named-let? (symbol? (cadr exp)))
+	   (name (if is-named-let? (cadr exp) (gensym)))
+	   (binds (if is-named-let? (caddr exp) (cadr exp)))
+	   (bodies (if is-named-let? (cdddr exp) (cddr exp))))
+      (apply (make-closure-with-names name env (map car binds) bodies)
 	     (map (lambda (e) (eval env e)) (map cadr binds)))))
+   ((eq? (car exp) 'let*)
+    (eval env (let let*-expand ((binds (cadr exp))
+				(bodies (cddr exp)))
+		(if (null? binds)
+		    `(let () ,@bodies)
+		    `(let (,(car binds)) ,(let*-expand (cdr binds) bodies))))))
+   ((eq? (car exp) 'letrec*)
+    (eval env (let letrec*-expand ((binds (cadr exp))
+				   (bodies (cddr exp)))
+		(if (null? binds)
+		    `(let () ,@bodies)
+		    (let ((var (caar binds))
+			  (val (cadar binds)))
+		      `(let ((,var #f))
+			 (set! ,var ,val)
+			 ,(letrec*-expand (cdr binds) bodies)))))))
+			     
 
 
    ; arithmetic operators
