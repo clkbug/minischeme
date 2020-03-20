@@ -216,7 +216,10 @@
    ((eq? (car exp) 'pair?) (apply pair? (map (lambda (e) (eval env e)) (cdr exp))))
    ((eq? (car exp) 'apply) (apply apply (map (lambda (e) (eval env e)) (cdr exp))))
    ((eq? (car exp) 'append) (apply append (map (lambda (e) (eval env e)) (cdr exp))))
-   
+
+   ((eq? (car exp) 'read) (apply read (map (lambda (e) (eval env e)) (cdr exp))))
+   ((eq? (car exp) 'write) (apply write (map (lambda (e) (eval env e)) (cdr exp))))
+
    (else
     (let ((f (eval env (car exp)))
 	  (args (map (lambda (e) (eval env e)) (cdr exp))))
