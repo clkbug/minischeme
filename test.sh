@@ -22,12 +22,12 @@ tests=( \
     )
 
 for t in ${tests[@]}; do
-    # echo $t
+    echo -n $t ...
     result=$(diff <(gosh test/$t) <(gosh main.scm test/$t))
     if [ $? -ne 0 ]; then
-	echo $result
+	echo -e $result
 	echo $t ... Failed
 	exit 1
     fi
-    echo $t ... OK
+    echo ' OK'
 done
