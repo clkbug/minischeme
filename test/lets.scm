@@ -23,6 +23,16 @@
 (write (let () (+ 1 2 3)))
 (newline)
 
+(let ((writeline (lambda (x) (write x) (newline))))
+  (writeline
+   (let loop ((n 10))
+     (if (= n 0)
+	 (let loop ((n 10))
+	   (if (= n 0)
+	       0
+	       (+ n (loop (- n 1)))))
+	 (+ n (loop (- n 1)))))))
+
 (write
  (let ((x 10))
    (+ x

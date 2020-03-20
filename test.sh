@@ -17,6 +17,7 @@ tests=(
     lets.scm
     cond.scm
     main-procedure.scm
+    message-passing.scm
 #	    read-and-write.scm \
 #	    define-macro.scm \
 #	    sytax-rules-simple.scm \

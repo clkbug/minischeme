@@ -40,3 +40,10 @@
 
 (write (quasiquote (unquote ((lambda (x) (+ x x)) 100))))
 (newline)
+
+(write (quasiquote (3 . 4)))
+(newline)
+
+(write (quasiquote
+	((1 2 . 3) . (4 5 . 6))))
+(newline)
