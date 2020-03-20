@@ -15,6 +15,7 @@ tests=( \
 	    define-toplevel.scm \
 	    quasiquote.scm \
 	    lets.scm \
+	    cond.scm \
 #	    define-macro.scm \
 #	    sytax-rules-simple.scm \
 
