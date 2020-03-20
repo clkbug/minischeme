@@ -75,3 +75,23 @@
 		     (else (format #t "failed to dispatch: env, msg(~a)\n" msg))))))
     dispatch))
 
+
+(define e0 (make-env #f))
+(define e1 (make-env e0))
+(writeline (e0 'find 'a))
+(e0 'add 'a 1)
+(e0 'find 'a)
+(e0 'add 'b 2)
+(writeline (e0 'find 'b))
+(e1 'add 'a 2)
+(e1 'add 'b 3)
+(writeline (e1 'find 'a))
+(writeline (e1 'find 'b))
+(writeline (e0 'find 'a))
+(e1 'update 'a 3)
+(writeline (e1 'find 'a))
+(e0 'add 'c 10)
+(writeline (e1 'find 'c))
+(e1 'update 'c 12)
+(writeline (e1 'find 'c))
+
